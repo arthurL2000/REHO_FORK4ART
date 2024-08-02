@@ -52,7 +52,57 @@ def plot_objective_function(file_template, start, n_clusters, nbuildings):
     plt.legend()
     plt.show()
 
+def plot_PV_production(file_path, start, n_clusters) :
+
+    '''
+    Parameters
+    ----------
+    file_template
+    start
+    n_clusters
+    nbuildings
+
+    Returns
+    -------
+
+    '''
+
+    clusters = []
+    PV_Supply = []
+
+    for n in range(start, n_clusters + 1):
+        file_path = file_template.format(n)
+        results = pd.read_pickle(file_path)
+        df_Results = results['totex'][0]
+        df_annuals = df_Results['df_Annuals']
+        df_annuals = df_annuals.replace(0, np.nan)
+        df_annuals = df_annuals.loc[df_annuals['Demand_MWh'].notnull() | df_annuals['Supply_MWh'].notnull()]
+        df_annuals = df_annuals.replace(np.nan, 0).reset_index()
+
+        sum = 0
+        for x in list(df_annuals.index) :
+            if df_annuals.loc[x, "Hub"].startswith('PV_Building') :
+                sum += df_annuals.loc[x, "Supply_MWh"]
+
+        PV_Supply.append(sum)
+        clusters.append(n)
+
+    plt.rcParams['axes.spines.left'] = False
+    plt.rcParams['axes.spines.right'] = False
+    plt.rcParams['axes.spines.top'] = False
+    plt.rcParams['axes.spines.bottom'] = False
+
+    plt.bar(clusters, PV_Supply, color='khaki')
+    plt.xticks(np.arange(start, n_clusters+1, step=1))
+    plt.xlabel('Amount of clusters [-]')
+    plt.ylabel('Annual PV production [MWh]', rotation=0,labelpad=-150, loc='top')
+
+    plt.show()
+
+
+
 if __name__ == '__main__':
 
     file_template = 'C:/Users/lefebvreart/PycharmProjects/REHO_2024_07_31/scripts/examples/results/3a_TD{}.pickle'
     plot_objective_function(file_template, 2, 16, 10)
+    plot_PV_production(file_template,2,16)
